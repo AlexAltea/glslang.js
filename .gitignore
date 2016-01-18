@@ -1,3 +1,14 @@
+# CMake
+CMakeFiles
+CMakeCache.txt
+*.cmake
+
+# Make
+Makefile
+
+# Object files
+*.a
+
 # Dependencies NodeJS
 node_modules/
 
