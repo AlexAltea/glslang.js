@@ -15,5 +15,3 @@ node_modules/
 # Emscripten builds
 *.out.js
 
-# Glslang.js
-/dist/*.js

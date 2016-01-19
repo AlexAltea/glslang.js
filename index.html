@@ -132,7 +132,7 @@ void main() {
             <div class="row">
                 <div class="col-md-6">
                     <h2>Information</h2>
-                    <p><b>Glslang.js</b> is a port of the <a href="https://www.khronos.org/opengles/sdk/tools/Reference-Compiler/">Glslang</a> compiler to JavaScript done with <a href="https://github.com/kripken/emscripten">Emscripten</a>. It's released as a 6 MB JavaScript file.</p>
+                    <p><b>Glslang.js</b> is a port of the <a href="https://www.khronos.org/opengles/sdk/tools/Reference-Compiler/">Glslang</a> compiler to JavaScript done with <a href="https://github.com/kripken/emscripten">Emscripten</a>. It's released as a 3 MB JavaScript file.</p>
                     <p>Glslang is the official reference compiler front-end for the OpenGL and OpenGL ES shading languages and includes a back-end to emit SPIR-V.</p>
 
                     <h2>Installation</h2>
@@ -202,27 +202,32 @@ glslang.finalize();</code></pre>
             // Glslang.JS
             glslang.initialize();
 
-            // Ace editor
+            // Ace editor: GLSL input
             var editorInput = ace.edit("editorInput");
-            editorInput.setTheme("ace/theme/dawn");
-            editorInput.getSession().setMode("ace/mode/glsl");
             editorInput.$blockScrolling = Infinity;
+            editorInput.getSession().setMode("ace/mode/glsl");
+            editorInput.setTheme("ace/theme/dawn");
+            editorInput.setOption("showPrintMargin", false);
+            editorInput.setOption("showInvisibles", false);
             editorInput.on("change", function (e) {
                 var scope = angular.element(document.getElementById("editorBackend")).scope();
                 scope.$apply(function () {
                     scope.source = editorInput.getValue();
                 });
             });
+
+            // Ace editor: SPIR-V output
             var editorOutput = ace.edit("editorOutput");
-            editorOutput.setTheme("ace/theme/dawn");
-            editorOutput.getSession().setMode("ace/mode/assembly_x86");
             editorOutput.$blockScrolling = Infinity;
+            editorOutput.getSession().setMode("ace/mode/assembly_x86");
+            editorOutput.setTheme("ace/theme/dawn");
+            editorOutput.setOption("showPrintMargin", false);
+            editorOutput.setOption("displayIndentGuides", false);
+            editorOutput.setOption("readOnly", true);
 
             function downloadBinary() {
-                console.log("blej");
                 var scope = angular.element(document.getElementById("editorOutput")).scope();
                 scope.$apply(function () {
-                    console.log("bleja");
                     download(scope.data, "shader.spv");
                 });
             }
@@ -245,7 +250,9 @@ glslang.finalize();</code></pre>
                 $scope.disasm = shader.disasm();
                 $scope.data_size = $scope.data.length;
                 $scope.disasm_size = $scope.disasm.length;
+
                 editorOutput.setValue(shader.disasm());
+                editorOutput.clearSelection();
             }
 
             // AngularJS

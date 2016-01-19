@@ -179,7 +179,7 @@ size_t gjsGetSpirvSize(const TObject* spirv) {
 
 const char* gjsGetSpirvDisassembly(TObject* spirv) {
     const std::vector<unsigned int>& contents = spirv->words;
-    uint32_t options = SPV_BINARY_TO_TEXT_OPTION_NONE;
+    uint32_t options = SPV_BINARY_TO_TEXT_OPTION_INDENT;
     spv_text& text = spirv->text;
     spv_context context = spvContextCreate();
     spv_diagnostic diagnostic = nullptr;

@@ -17,7 +17,32 @@ bower install glslangjs
 ```
 
 ## Usage                                                      
-*TODO*
+```javascript
+// Input: GLSL source code and shader type
+var type = glslang.EShLangFragment;
+var source = " \
+    #version 150\n \
+    out vec4 finalColor \
+    void main() { \
+        finalColor = vec4(1.0, 1.0, 1.0, 1.0); \
+    }";
+
+// Initialize Glslang
+glslang.initialize();
+
+// Compile shader
+var shader = new glslang.Shader(type, source);
+
+// Output: SPIR-V binary and disassembly
+var binary = shader.data();
+var disassembly = shader.disasm();
+
+// Delete shader
+shader.delete();
+
+// Finalize Glslang
+glslang.finalize();
+```
 
 ## Building
 To build the Glslang.js library, clone the *master* branch of this repository, and do the following:
