@@ -16,25 +16,6 @@ var glslang = {
     EShLangFragment            : 4,  // Fragment
     EShLangCompute             : 5,  // Compute
     
-    // Options
-    EOptionNone                : 0x0000,
-    EOptionIntermediate        : 0x0001,
-    EOptionSuppressInfolog     : 0x0002,
-    EOptionMemoryLeakMode      : 0x0004,
-    EOptionRelaxedErrors       : 0x0008,
-    EOptionGiveWarnings        : 0x0010,
-    EOptionLinkProgram         : 0x0020,
-    EOptionMultiThreaded       : 0x0040,
-    EOptionDumpConfig          : 0x0080,
-    EOptionDumpReflection      : 0x0100,
-    EOptionSuppressWarnings    : 0x0200,
-    EOptionDumpVersions        : 0x0400,
-    EOptionSpv                 : 0x0800,
-    EOptionHumanReadableSpv    : 0x1000,
-    EOptionVulkanRules         : 0x2000,
-    EOptionDefaultDesktop      : 0x4000,
-    EOptionOutputPreprocessed  : 0x8000,
-    
     // Messages
     EShMsgDefault              : 0x0000,  // Default is to give all required errors and extra warnings
     EShMsgRelaxedErrors        : 0x0001,  // Be liberal in accepting input
@@ -44,10 +25,44 @@ var glslang = {
     EShMsgVulkanRules          : 0x0010,  // Issue messages for Vulkan requirements of GLSL for SPIR-V
     EShMsgOnlyPreprocessor     : 0x0020,  // Only print out errors produced by the preprocessor
 
-    /**
-     * Glslang compiler
-     */
-    Compiler: function (lang) {
-        this.lang = lang;
+    initialize: function () {
+        var success = Module.ccall('gjsInitialize');
+        if (!success) {
+            console.error('Glslang.js: Function gjsInitialize failed');
+        }
     },
+
+    finalize: function () {
+        Module.ccall('gjsFinalize');
+    },
+
+    Shader: function (type, source) {
+        this.type = type;
+        this.source = source;
+        this.handle = 0;
+        
+        this.delete = function () {
+            Module.ccall('gjsDestruct', 'void', ['pointer'], [this.handle]);
+        };
+
+        this.data = function () {
+            var data = Module.ccall('gjsGetSpirvData', 'number', ['pointer'], [this.handle]);
+            var size = Module.ccall('gjsGetSpirvSize', 'number', ['pointer'], [this.handle]);
+            var buffer = new Uint8Array(Module.HEAPU8.buffer, data, size);
+            return buffer;
+        };
+
+        this.disasm = function () {
+            var string = Module.ccall('gjsGetSpirvDisassembly', 'string', ['pointer'], [this.handle]);
+            return string;
+        };
+
+        // Constructor
+        var options = 0;
+        var messages = glslang.EShMsgSpvRules | glslang.EShMsgVulkanRules;
+        this.handle = Module.ccall('gjsCompile', 'pointer', ['string', 'number', 'number', 'number'], [source, type, options, messages]);
+        if (!this.handle) {
+            console.log("Glslang.JS: Could not compile shader");
+        }
+    }
 };

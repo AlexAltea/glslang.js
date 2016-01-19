@@ -1,6 +1,6 @@
 Glslang.js
 ==========
-[![Last Release](https://img.shields.io/badge/version-1.0.0-brightgreen.svg?style=flat)](https://github.com/AlexAltea/capstone.js/releases)
+[![Last Release](https://img.shields.io/badge/version-1.0.0-brightgreen.svg?style=flat)](https://github.com/AlexAltea/glslang.js/releases)
 
 Real-time GLSL to SPIR-V translator. Powered by [Glslang](https://www.opengl.org/sdk/tools/glslang/) and Khronos' [SPIR-V Tools](https://github.com/KhronosGroup/SPIRV-Tools).
 
@@ -8,7 +8,7 @@ Compiled into JavaScript via [Emscripten](https://github.com/kripken/emscripten)
 
 ## Installation
 To install the Glslang.js install in your web application, include it with:
-```
+```html
 <script src="glslang.min.js"></script>
 ```
 or installer through the Bower command:
