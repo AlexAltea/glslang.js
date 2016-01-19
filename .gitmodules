@@ -2,3 +2,7 @@
 	path = externals/glslang
 	url = https://github.com/KhronosGroup/glslang.git
 	ignore = dirty
+[submodule "externals/SPIRV-Tools"]
+	path = externals/SPIRV-Tools
+	url = https://github.com/KhronosGroup/SPIRV-Tools.git
+	ignore = dirty
