@@ -20,12 +20,12 @@ bower install glslangjs
 ```javascript
 // Input: GLSL source code and shader type
 var type = glslang.EShLangFragment;
-var source = " \
-    #version 150\n \
-    out vec4 finalColor \
-    void main() { \
-        finalColor = vec4(1.0, 1.0, 1.0, 1.0); \
-    }";
+var source = `
+    #version 150
+    out vec4 finalColor
+    void main() {
+        finalColor = vec4(1.0, 1.0, 1.0, 1.0);
+    }`;
 
 // Initialize Glslang
 glslang.initialize();
