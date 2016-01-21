@@ -112,14 +112,41 @@ void main() {
                 <div class="col-md-6">
                     <h3>SPIR-V</h3>
                     <div style="padding-bottom:4px">
+                        <div class="btn-group">
+                            <button class="btn btn-default btn-lg dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                View <span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li ng-style="{'background' : preview=='asm' ? '#eee' : '#fff'}"><a href="#" ng-click="preview='asm'">
+                                    <span ng-style="{'font-weight' : preview=='asm' ? 'bold' : 'normal'}">
+                                        Assembly
+                                    </span>
+                                </a></li>
+                                <li ng-style="{'background' : preview=='bin' ? '#eee' : '#fff'}"><a href="#" ng-click="preview='bin'">
+                                    <span ng-style="{'font-weight' : preview=='bin' ? 'bold' : 'normal'}">
+                                        Binary
+                                    </span>
+                                </a></li>
+                                <li ng-style="{'background' : preview=='u8' ? '#eee' : '#fff'}"><a href="#" ng-click="preview='u8'">
+                                    <span ng-style="{'font-weight' : preview=='u8' ? 'bold' : 'normal'}">
+                                        C/C++ (Bytes)
+                                    </span>
+                                </a></li>
+                                <li ng-style="{'background' : preview=='u32' ? '#eee' : '#fff'}"><a href="#" ng-click="preview='u32'">
+                                    <span ng-style="{'font-weight' : preview=='u32' ? 'bold' : 'normal'}">
+                                        C/C++ (Words)
+                                    </span>
+                                </a></li>
+                            </ul>
+                        </div>
                         <button type="button" class="btn btn-default btn-lg"  onclick="downloadBinary()">
                             <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
-                            Binary SPIR-V
+                            Binary
                             <span style="font-size:12px">({{ data_size | bytes }})</span>
                         </button>
                         <button type="button" class="btn btn-default btn-lg"  onclick="downloadAssembly()">
                             <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
-                            Assembly SPIR-V
+                            Assembly
                             <span style="font-size:12px">({{ disasm_size | bytes }})</span>
                         </button>
                     </div>
@@ -184,13 +211,15 @@ glslang.finalize();</code></pre>
         </div>
 
         <!-- External scripts -->
-        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.5/angular.js"></script>
-        <script src="http://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/highlight.min.js"></script>
-        <script src="http://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/languages/javascript.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.3/ace.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.3/snippets/glsl.js"></script>
+        <script src="//code.jquery.com/jquery-2.2.0.min.js"></script>
+        <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+        <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.5/angular.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.1.0/highlight.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.1.0/languages/javascript.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/ace/1.2.3/ace.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/ace/1.2.3/snippets/glsl.js"></script>
         <script src="externals/download.js"></script>
-        
+
         <!-- GlslangJS -->
         <script src="dist/glslang.min.js"></script>
 
@@ -219,11 +248,17 @@ glslang.finalize();</code></pre>
             // Ace editor: SPIR-V output
             var editorOutput = ace.edit("editorOutput");
             editorOutput.$blockScrolling = Infinity;
-            editorOutput.getSession().setMode("ace/mode/assembly_x86");
             editorOutput.setTheme("ace/theme/dawn");
             editorOutput.setOption("showPrintMargin", false);
             editorOutput.setOption("displayIndentGuides", false);
             editorOutput.setOption("readOnly", true);
+
+            // Utils
+            function hexadecimal(value, length) {
+                var length = length || 8;
+                var str = '0000000000000000' + value.toString(16).toUpperCase();
+                return str.slice(-length);
+            };
 
             function downloadBinary() {
                 var scope = angular.element(document.getElementById("editorOutput")).scope();
@@ -251,8 +286,62 @@ glslang.finalize();</code></pre>
                 $scope.data_size = $scope.data.length;
                 $scope.disasm_size = $scope.disasm.length;
 
-                editorOutput.setValue(shader.disasm());
-                editorOutput.clearSelection();
+                switch ($scope.preview) {
+                    case 'asm':
+                        editorOutput.getSession().setMode("ace/mode/assembly_x86");
+                        editorOutput.setValue($scope.disasm);
+                        editorOutput.clearSelection();
+                        break;
+
+                    case 'bin':
+                        var output = "";
+                        for (var offset = 0; offset < $scope.data_size; offset += 16) {
+                            output += hexadecimal(offset, 8) + "  ";
+                            for (var i = offset; i < offset + 16 && i < $scope.data_size; i++) {
+                                output += hexadecimal($scope.data[i], 2) + " ";
+                            }
+                            output += "\n";
+                        }
+                        editorOutput.getSession().setMode("ace/mode/plain_text");
+                        editorOutput.setValue(output);
+                        editorOutput.clearSelection();
+                        break;
+
+                    case 'u8':
+                        var output = "const uint8_t buffer[] = {\n";
+                        for (var offset = 0; offset < $scope.data_size; offset += 8) {
+                            output += "  ";
+                            for (var i = offset; i < offset + 8 && i < $scope.data_size; i++) {
+                                output += "0x" + hexadecimal($scope.data[i], 2) + ", ";
+                            }
+                            output += "\n";
+                        }
+                        output += "};\n";
+                        editorOutput.getSession().setMode("ace/mode/c_cpp");
+                        editorOutput.setValue(output);
+                        editorOutput.clearSelection();
+                        break;
+
+                    case 'u32':
+                        var output = "const uint32_t buffer[] = {\n";
+                        for (var offset = 0; offset < $scope.data_size; offset += 16) {
+                            output += "  ";
+                            for (var i = offset; i < offset + 16 && i < $scope.data_size; i += 4) {
+                                output += "0x";
+                                output += hexadecimal($scope.data[i+3], 2);
+                                output += hexadecimal($scope.data[i+2], 2);
+                                output += hexadecimal($scope.data[i+1], 2);
+                                output += hexadecimal($scope.data[i+0], 2);
+                                output += ", ";
+                            }
+                            output += "\n";
+                        }
+                        output += "};\n";
+                        editorOutput.getSession().setMode("ace/mode/c_cpp");
+                        editorOutput.setValue(output);
+                        editorOutput.clearSelection();
+                        break;
+                }
             }
 
             // AngularJS
@@ -267,21 +356,17 @@ glslang.finalize();</code></pre>
                 $scope.$watch('source', function () {
                     glslangUpdate($scope);
                 });
+                $scope.$watch('preview', function () {
+                    glslangUpdate($scope);
+                });
 
                 // Defaults
                 $scope.type = glslang.EShLangFragment;
                 $scope.source = "#version 150\n\nout vec4 finalColor;\n\nvoid main() {\n    finalColor = vec4(1.0, 1.0, 1.0, 1.0);\n}\n";
+                $scope.preview = "asm";
             }]);
 
             // Filters
-            gjs.filter('hexadecimal', function () {
-                return function (value, length) {
-                    var length = length || 8;
-                    var str = '0000000000000000' + value.toString(16).toUpperCase();
-                    return str.slice(-length);
-                };
-            });
-
             gjs.filter('bytes', function () {
                 return function (bytes, precision) {
                     if (isNaN(parseFloat(bytes)) || !isFinite(bytes)) {
