@@ -86,17 +86,32 @@
                 Note that the scripts might take a while to load.
             </p>
             <div class="row" data-ng-controller="gjsController">
-                <div class="col-md-6">
+                <div class="col-md-6" id="fileDropArea" style="height:100%;">
+                    <div id="fileDropBanner" style="background:#000; position:absolute; top:0; left:0; width:100%; height:100%; opacity:0.0; z-index:999; text-align:center; pointer-events:none">
+                        <div style="color:#FFF; font-size: 30px;">
+                            <br> <br> <br> <br> <!-- WONTFIX: I know, I don't care. If it annoys you, submit a Pull Request. -->
+                            Drop files here!
+                        </div>
+                    </div>
                     <h3>GLSL</h3>
                     <div style="padding-bottom:4px">
-                        <select class="select" ng-model="type">
-                            <option value="0">Vertex</option>
-                            <option value="1">Tesselation control</option>
-                            <option value="2">Tesselation evaluation</option>
-                            <option value="3">Geometry</option>
-                            <option value="4">Fragment</option>
-                            <option value="5">Compute</option>
-                        </select>
+                        <div class="btn-group">
+                            <select class="select" ng-model="type">
+                                <option value="0">Vertex</option>
+                                <option value="1">Tesselation control</option>
+                                <option value="2">Tesselation evaluation</option>
+                                <option value="3">Geometry</option>
+                                <option value="4">Fragment</option>
+                                <option value="5">Compute</option>
+                            </select>
+                        </div>
+                        <button type="button" id="fileSelectButton" class="btn btn-default btn-lg" onclick="uploadSource()">
+                            <span class="glyphicon glyphicon-upload" aria-hidden="true"></span>
+                            Upload...
+                        </button>
+                        <div style="height:0px;overflow:hidden">
+                            <input type="file" id="fileSelectInput"/>
+                        </div>
                     </div>
                     <textarea id="editorBackend" ng-model="source" style="display:none"></textarea>
                     <div class="editor" id="editorInput">#version 150
@@ -231,6 +246,36 @@ glslang.finalize();</code></pre>
             // Glslang.JS
             glslang.initialize();
 
+            // File upload
+            $('#fileSelectInput').change(uploadSource);
+            $('#fileSelectButton').click(function () {
+                $('#fileSelectInput').click();
+            });
+            $('#fileDropArea').on('drop', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                uploadSource(e);
+            });
+            $('#fileDropArea').on('dragover', function (e) {
+                e.preventDefault();  
+                e.stopPropagation();
+                $('#fileDropBanner').animate({
+                    opacity: 0.5
+                });
+                setTimeout(function () {
+                    $('#fileDropBanner').animate({
+                        opacity: 0.0
+                    });
+                }, 1000);
+            });
+            $('#fileDropArea').on('dragleave', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                $('#fileDropBanner').animate({
+                    opacity: 0.0
+                });
+            });
+
             // Ace editor: GLSL input
             var editorInput = ace.edit("editorInput");
             editorInput.$blockScrolling = Infinity;
@@ -259,6 +304,51 @@ glslang.finalize();</code></pre>
                 var str = '0000000000000000' + value.toString(16).toUpperCase();
                 return str.slice(-length);
             };
+
+            function uploadSource(e) {
+                if (!e) {
+                    return;
+                }
+
+                // Get list
+                var scope = angular.element(document.getElementById("editorBackend")).scope();
+                scope.$apply(function () {
+                    if (typeof e.target !== 'undefined' && typeof e.target.files !== 'undefined') {
+                        var file = e.target.files[0];
+                    } else if (typeof e.dataTransfer !== 'undefined') {
+                        var file = e.dataTransfer.files[0];
+                    } else {
+                        var file = e.originalEvent.dataTransfer.files[0];
+                    }
+                    if (file.name.length >= 5) {
+                        var name = file.name;
+                        switch (name.substr(name.length - 5)) {
+                            case '.vert':
+                                scope.type = glslang.EShLangVertex; break;
+                            case '.tesc':
+                                scope.type = glslang.EShLangTessControl; break;
+                            case '.tese':
+                                scope.type = glslang.EShLangTessEvaluation; break;
+                            case '.geom':
+                                scope.type = glslang.EShLangGeometry; break;
+                            case '.frag':
+                                scope.type = glslang.EShLangFragment; break;
+                            case '.comp':
+                                scope.type = glslang.EShLangCompute; break;
+                        }
+                    }
+
+                    // Reader
+                    reader = new FileReader();
+                    reader.onloadend = function (e) {
+                        scope.source = e.target.result;
+                        editorInput.setValue(scope.source);
+                        editorInput.clearSelection();
+                        glslangUpdate(scope);
+                    };
+                    reader.readAsBinaryString(file);
+                });
+            }
 
             function downloadBinary() {
                 var scope = angular.element(document.getElementById("editorOutput")).scope();
