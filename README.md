@@ -7,12 +7,12 @@ Real-time GLSL to SPIR-V translator. Powered by [Glslang](https://www.opengl.org
 Compiled into JavaScript via [Emscripten](https://github.com/kripken/emscripten).
 
 ## Installation
-To install the Glslang.js install in your web application, include it with:
+To add Glslang.js to your web application, include it with:
 ```html
 <script src="glslang.min.js"></script>
 ```
-or installer through the Bower command:
-```
+or install it with the Bower command:
+```bash
 bower install glslangjs
 ```
 
