@@ -22,7 +22,7 @@ bower install glslangjs
 var type = glslang.EShLangFragment;
 var source = `
     #version 150
-    out vec4 finalColor
+    out vec4 finalColor;
     void main() {
         finalColor = vec4(1.0, 1.0, 1.0, 1.0);
     }`;
